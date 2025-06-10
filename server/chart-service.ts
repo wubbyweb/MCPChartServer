@@ -38,7 +38,7 @@ class ChartService {
       }
 
       // Make API request to chart-img.com
-      const response = await fetch(`${this.baseUrl}/api/v2/tradingview/advanced-chart`, {
+      const response = await fetch(`${this.baseUrl}/v1/tradingview/mini-chart`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ class ChartService {
 
   async getAvailableSymbols(): Promise<string[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v3/symbols`, {
+      const response = await fetch(`${this.baseUrl}/v3/exchanges`, {
         headers: {
           'x-api-key': this.apiKey,
         },
@@ -197,10 +197,16 @@ class ChartService {
       }
 
       const data = await response.json();
-      return data.symbols || [];
+      return data.exchanges || [];
     } catch (error) {
       console.error('Error fetching symbols:', error);
-      return [];
+      // Return common symbol formats as fallback
+      return [
+        'NASDAQ:AAPL', 'NASDAQ:MSFT', 'NASDAQ:GOOGL', 'NASDAQ:TSLA',
+        'NYSE:IBM', 'NYSE:JPM', 'NYSE:KO', 'NYSE:DIS',
+        'BINANCE:BTCUSDT', 'BINANCE:ETHUSDT', 'BINANCE:ADAUSDT',
+        'FOREX:EURUSD', 'FOREX:GBPUSD', 'FOREX:USDJPY'
+      ];
     }
   }
 
