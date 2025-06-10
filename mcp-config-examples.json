@@ -1,0 +1,41 @@
+{
+  "claude_desktop_config": {
+    "mcpServers": {
+      "chart-server": {
+        "command": "npx",
+        "args": [
+          "tsx",
+          "mcp-server.ts"
+        ],
+        "cwd": "/absolute/path/to/your/mcp-chart-server",
+        "env": {
+          "CHART_IMG_API_KEY": "your_api_key_here"
+        }
+      }
+    }
+  },
+  "cline_config": {
+    "name": "chart-server",
+    "command": "npx",
+    "args": ["tsx", "mcp-server.ts"],
+    "cwd": "/absolute/path/to/your/mcp-chart-server",
+    "env": {
+      "CHART_IMG_API_KEY": "your_api_key_here"
+    }
+  },
+  "continue_config": {
+    "experimental": {
+      "modelContextProtocol": true
+    },
+    "mcpServers": {
+      "chart-server": {
+        "command": "npx",
+        "args": ["tsx", "mcp-server.ts"],
+        "cwd": "/absolute/path/to/your/mcp-chart-server",
+        "env": {
+          "CHART_IMG_API_KEY": "your_api_key_here"
+        }
+      }
+    }
+  }
+}
