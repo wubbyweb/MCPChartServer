@@ -2,6 +2,10 @@
 
 A Model Context Protocol (MCP) server that integrates with Chart-IMG API to generate TradingView chart visualizations using Server-Sent Events (SSE) for real-time updates.
 
+<a href="https://glama.ai/mcp/servers/@wubbyweb/MCPChartServer">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@wubbyweb/MCPChartServer/badge" alt="Chart Server MCP server" />
+</a>
+
 ## Features
 
 - **Real-time Chart Generation**: Generate TradingView charts with live progress updates
