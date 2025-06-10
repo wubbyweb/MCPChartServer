@@ -23,30 +23,8 @@ export default function RequestPanel({ selectedEndpoint, onGenerateChart, isGene
     chartType: "candlestick",
     width: 800,
     height: 600,
-    indicators: [
-      {
-        type: "sma",
-        period: 20,
-        color: "#FF6B6B"
-      },
-      {
-        type: "rsi",
-        period: 14,
-        overbought: 70,
-        oversold: 30
-      }
-    ],
-    drawings: [
-      {
-        type: "trendline",
-        points: [
-          { x: "2024-01-01", y: 150.00 },
-          { x: "2024-12-01", y: 180.00 }
-        ],
-        color: "#8B5CF6",
-        width: 2
-      }
-    ],
+    indicators: [],
+    drawings: [],
     theme: "light",
     showVolume: true,
     showGrid: true,

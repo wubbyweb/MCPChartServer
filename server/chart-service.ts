@@ -153,20 +153,40 @@ class ChartService {
         payload.type = 1; // Default to candlestick
     }
 
-    // Add indicators
+    // Add indicators with correct Chart-IMG format
     if (config.indicators && config.indicators.length > 0) {
-      payload.studies = config.indicators.map(indicator => ({
-        name: indicator.type.toUpperCase(),
-        inputs: indicator.period ? [indicator.period] : [],
-        styles: indicator.color ? { plot_0: { color: indicator.color } } : {},
-      }));
+      payload.studies = config.indicators.map(indicator => {
+        const study: any = {
+          name: this.mapIndicatorName(indicator.type),
+          inputs: [],
+        };
+
+        // Add period input for indicators that support it
+        if (indicator.period) {
+          study.inputs.push(indicator.period);
+        }
+
+        // Add style overrides if color is specified
+        if (indicator.color) {
+          study.styles = {
+            plot_0: { color: indicator.color }
+          };
+        }
+
+        return study;
+      });
     }
 
-    // Add drawings
+    // Add drawings with correct Chart-IMG format
     if (config.drawings && config.drawings.length > 0) {
       payload.drawings = config.drawings.map(drawing => ({
-        type: drawing.type,
-        points: drawing.points,
+        name: this.mapDrawingName(drawing.type),
+        input: {
+          points: drawing.points.map(point => ({
+            time: point.x,
+            price: point.y
+          }))
+        },
         options: {
           color: drawing.color || '#8B5CF6',
           linewidth: drawing.width || 2,
@@ -182,6 +202,32 @@ class ChartService {
     };
 
     return payload;
+  }
+
+  private mapIndicatorName(type: string): string {
+    const indicatorMap: { [key: string]: string } = {
+      'sma': 'Moving Average',
+      'ema': 'Moving Average Exponential',
+      'rsi': 'Relative Strength Index',
+      'macd': 'MACD',
+      'bb': 'Bollinger Bands',
+      'stoch': 'Stochastic',
+      'atr': 'Average True Range',
+      'volume': 'Volume',
+    };
+    
+    return indicatorMap[type.toLowerCase()] || 'Moving Average';
+  }
+
+  private mapDrawingName(type: string): string {
+    const drawingMap: { [key: string]: string } = {
+      'trendline': 'Trend Line',
+      'horizontal': 'Horizontal Line',
+      'vertical': 'Vertical Line',
+      'rectangle': 'Rectangle',
+    };
+    
+    return drawingMap[type.toLowerCase()] || 'Trend Line';
   }
 
   async getAvailableSymbols(): Promise<string[]> {
