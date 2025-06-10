@@ -38,7 +38,7 @@ class ChartService {
       }
 
       // Make API request to chart-img.com
-      const response = await fetch(`${this.baseUrl}/v1/tradingview/mini-chart`, {
+      const response = await fetch(`${this.baseUrl}/v2/tradingview/advanced-chart`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
