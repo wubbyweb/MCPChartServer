@@ -59,12 +59,28 @@ app.use((req, res, next) => {
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = 5000;
+  const port = process.env.PORT || 2000;
+  
+  // Fixed: Removed reusePort option which is not supported on macOS
   server.listen({
-    port,
+    port: Number(port),
     host: "0.0.0.0",
-    reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+  });
+  
+  server.on('error', (err: any) => {
+    console.error(`Server error: ${err.message}`);
+    
+    // Fallback to localhost if 0.0.0.0 binding fails
+    if (err.code === 'ENOTSUP' || err.code === 'EADDRINUSE') {
+      console.log(`Retrying with localhost instead of 0.0.0.0`);
+      server.listen({
+        port: Number(port),
+        host: "localhost",
+      }, () => {
+        log(`serving on port ${port} (localhost)`);
+      });
+    }
   });
 })();
