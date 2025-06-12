@@ -364,6 +364,25 @@ See `examples/client-examples.md` for complete implementations in:
 
 Each example includes proper SSE event handling, chart generation tracking, and error management.
 
+## MCP Client Connection Issues
+
+If your MCP client shows "Waiting for server to respond to `initialize` request...", the HTTP MCP server is working correctly. This typically indicates:
+
+1. **Incorrect server URL** - Ensure client connects to `http://localhost:3001`
+2. **Missing Content-Type header** - Include `Content-Type: application/json`
+3. **Network connectivity** - Verify port 3001 is accessible
+4. **Client timeout** - Increase timeout settings in your MCP client
+
+**Quick Test:**
+```bash
+# Verify server is responding
+curl -X POST http://localhost:3001/mcp/initialize \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+```
+
+See `MCP_CLIENT_TROUBLESHOOTING.md` for detailed debugging steps and client configuration examples.
+
 ## License
 
 MIT License - see LICENSE file for details.

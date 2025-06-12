@@ -19,15 +19,6 @@ class SSEManager {
 
     this.clients.set(clientId, client);
 
-    // Set up SSE headers
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Cache-Control',
-    });
-
     // Send initial connection event
     this.sendEvent(clientId, 'connection', 'SSE connection established', 'system');
 
@@ -85,9 +76,9 @@ class SSEManager {
   }
 
   broadcast(eventType: string, message: string, requestId: string, data?: any): void {
-    for (const clientId of this.clients.keys()) {
+    this.clients.forEach((client, clientId) => {
       this.sendEvent(clientId, eventType, message, requestId, data);
-    }
+    });
   }
 
   getClientCount(): number {
@@ -100,6 +91,23 @@ export const sseManager = new SSEManager();
 export function handleSSEConnection(req: Request, res: Response): void {
   const clientId = req.query.clientId as string || `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   const lastEventId = req.headers['last-event-id'] as string;
+
+  // Set SSE headers
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Cache-Control',
+  });
+
+  // Send initial connection event
+  res.write(`event: connection\n`);
+  res.write(`data: ${JSON.stringify({
+    type: 'connected',
+    clientId,
+    timestamp: new Date().toISOString()
+  })}\n\n`);
 
   sseManager.addClient(clientId, res, lastEventId);
 }
