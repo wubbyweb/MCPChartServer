@@ -27,18 +27,33 @@ echo "CHART_IMG_API_KEY=your_api_key_here" > .env
 ```
 
 ### 3. Run the Server
+
+**Option A: Web Interface (Development)**
 ```bash
-# Web interface (development)
 npm run dev
 # Access: http://localhost:5000
+```
 
-# MCP server (for clients)
+**Option B: STDIO MCP Server (Traditional)**
+```bash
 npx tsx mcp-server.ts
 ```
+
+**Option C: HTTP MCP Server with SSE (Recommended)**
+```bash
+npx tsx mcp-http-server.ts
+# Or use the startup script:
+./start-mcp-http.sh
+# Server runs on: http://localhost:3001
+```
+
+The HTTP mode provides Server-Sent Events (SSE) for real-time chart generation updates and supports multiple concurrent clients.
 
 ## MCP Client Configuration
 
 ### Claude Desktop
+
+**STDIO Mode (Traditional):**
 Add to `claude_desktop_config.json`:
 ```json
 {
@@ -55,12 +70,76 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
+**HTTP Mode (Recommended):**
+```json
+{
+  "mcpServers": {
+    "chart-server-http": {
+      "url": "http://localhost:3001",
+      "transport": "http"
+    }
+  }
+}
+```
+
 **Config File Locations:**
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ### Cline/Continue
-Similar configuration in your MCP settings.
+
+**STDIO Mode:**
+```json
+{
+  "name": "chart-server",
+  "command": "npx",
+  "args": ["tsx", "mcp-server.ts"],
+  "cwd": "/path/to/mcp-chart-server",
+  "env": {
+    "CHART_IMG_API_KEY": "your_api_key"
+  }
+}
+```
+
+**HTTP Mode:**
+```json
+{
+  "name": "chart-server-http",
+  "url": "http://localhost:3001",
+  "type": "http"
+}
+```
+
+### HTTP MCP Server with SSE
+
+The HTTP MCP server provides real-time communication through Server-Sent Events (SSE) and standard REST endpoints:
+
+**Core MCP Endpoints:**
+- `POST /mcp/initialize` - Initialize MCP connection
+- `POST /mcp/tools/list` - List available tools
+- `POST /mcp/tools/call` - Execute tools
+
+**Real-time Communication:**
+- `GET /mcp/events/:clientId` - SSE event stream for live updates
+- Chart generation progress, completion notifications, and errors
+
+**Management Endpoints:**
+- `GET /mcp/health` - Server health and configuration status
+- `GET /` - Server information and endpoint documentation
+
+**SSE Event Types:**
+- `connection` - Client connection status
+- `chart_progress` - Real-time chart generation updates
+- `heartbeat` - Keep-alive messages
+
+**Example SSE Usage:**
+```javascript
+const eventSource = new EventSource('http://localhost:3001/mcp/events/my-client');
+eventSource.addEventListener('chart_progress', (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Chart status:', data.type, data.message);
+});
+```
 
 ## Available Tools
 
@@ -164,17 +243,113 @@ Error: Too many requests
 Solution: Check your Chart-IMG plan limits
 ```
 
+## Server Modes Comparison
+
+| Feature | Web Interface | STDIO MCP | HTTP MCP + SSE |
+|---------|---------------|-----------|----------------|
+| Purpose | Development/Testing | Claude Desktop | Universal Clients |
+| Transport | HTTP | Standard I/O | HTTP + SSE |
+| Real-time Updates | WebSocket | None | Server-Sent Events |
+| Multiple Clients | Yes | No | Yes |
+| Language Support | Browser | MCP Clients Only | Any HTTP Client |
+| Debugging | Browser DevTools | Logs | HTTP Tools + SSE |
+
+## SSE Integration Details
+
+The HTTP MCP server uses Server-Sent Events for real-time communication:
+
+**Connection Flow:**
+1. Client connects to `/mcp/events/:clientId`
+2. Server establishes SSE stream
+3. Real-time events sent during chart generation
+4. Automatic reconnection on disconnect
+
+**Event Structure:**
+```javascript
+{
+  "type": "chart_progress",
+  "requestId": "req_1234567890_1", 
+  "message": "Chart generation started",
+  "timestamp": "2025-06-12T03:16:30.000Z",
+  "data": {
+    "symbol": "NASDAQ:AAPL",
+    "status": "processing"
+  }
+}
+```
+
+**Client Implementation:**
+```javascript
+class MCPSSEClient {
+  constructor(baseUrl = 'http://localhost:3001') {
+    this.baseUrl = baseUrl;
+    this.clientId = `client_${Date.now()}`;
+    this.eventSource = null;
+  }
+
+  connect() {
+    this.eventSource = new EventSource(
+      `${this.baseUrl}/mcp/events/${this.clientId}`
+    );
+    
+    this.eventSource.onmessage = (event) => {
+      console.log('SSE Event:', JSON.parse(event.data));
+    };
+    
+    this.eventSource.addEventListener('chart_progress', (event) => {
+      const data = JSON.parse(event.data);
+      this.onChartProgress(data);
+    });
+  }
+
+  onChartProgress(data) {
+    console.log(`Chart ${data.requestId}: ${data.message}`);
+  }
+
+  async callTool(name, args) {
+    const response = await fetch(`${this.baseUrl}/mcp/tools/call`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: Date.now(),
+        method: 'tools/call',
+        params: { name, arguments: args }
+      })
+    });
+    return await response.json();
+  }
+}
+
+// Usage with real-time updates
+const client = new MCPSSEClient();
+client.connect();
+
+const result = await client.callTool('generate_chart', {
+  symbol: 'NASDAQ:AAPL',
+  interval: '1D',
+  chartType: 'candlestick'
+});
+// SSE events will show progress in real-time
+```
+
 ## Development
 
 ```bash
-# Start web server
+# Start web server (port 5000)
 npm run dev
 
-# Run MCP server
+# Run STDIO MCP server
 npx tsx mcp-server.ts
+
+# Run HTTP MCP server with SSE (port 3001)
+npx tsx mcp-http-server.ts
 
 # Type checking
 npm run check
+
+# Test HTTP MCP server
+node test-mcp-http.js
 ```
 
 ## License

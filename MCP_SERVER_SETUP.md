@@ -41,9 +41,9 @@ The server will start on `http://localhost:5000`
 
 ## MCP Server Configuration
 
-### For Claude Desktop
+### Option 1: STDIO Mode (Traditional)
 
-Add this configuration to your Claude Desktop settings file:
+For Claude Desktop, add this configuration to your settings file:
 
 **Location:** 
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -53,9 +53,10 @@ Add this configuration to your Claude Desktop settings file:
 {
   "mcpServers": {
     "chart-server": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "server/index.ts"
+        "tsx",
+        "mcp-server.ts"
       ],
       "cwd": "/path/to/your/mcp-chart-server",
       "env": {
@@ -66,17 +67,55 @@ Add this configuration to your Claude Desktop settings file:
 }
 ```
 
-### For Cline/Other MCP Clients
+### Option 2: HTTP Mode (Recommended)
 
+Start the HTTP server:
+```bash
+npx tsx mcp-http-server.ts
+```
+
+The server runs on `http://localhost:3001` with these endpoints:
+
+- `POST /mcp/initialize` - Initialize MCP connection
+- `POST /mcp/tools/list` - List available tools
+- `POST /mcp/tools/call` - Execute tools
+- `GET /mcp/events/:clientId` - SSE events stream
+- `GET /mcp/health` - Health check
+- `GET /` - Server information
+
+**For HTTP-capable MCP clients:**
+```json
+{
+  "mcpServers": {
+    "chart-server-http": {
+      "url": "http://localhost:3001",
+      "apiKey": "optional-if-required"
+    }
+  }
+}
+```
+
+### For Cline/Continue
+
+**STDIO Mode:**
 ```json
 {
   "name": "chart-server",
-  "command": "node",
-  "args": ["server/index.ts"],
+  "command": "npx",
+  "args": ["tsx", "mcp-server.ts"],
   "cwd": "/path/to/your/mcp-chart-server",
   "env": {
     "CHART_IMG_API_KEY": "your_api_key_here"
   }
+}
+```
+
+**HTTP Mode:**
+```json
+{
+  "name": "chart-server-http",
+  "url": "http://localhost:3001",
+  "type": "http"
 }
 ```
 
