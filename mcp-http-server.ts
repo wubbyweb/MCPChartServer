@@ -512,8 +512,14 @@ class ChartMCPHttpServer {
   }
 
   async start(): Promise<void> {
-    return new Promise((resolve) => {
-      this.server.listen(this.port, () => {
+    return new Promise((resolve, reject) => {
+      this.server.listen(this.port, '0.0.0.0', (error?: Error) => {
+        if (error) {
+          console.error('Failed to start server:', error);
+          reject(error);
+          return;
+        }
+        
         console.log(`Chart-IMG MCP HTTP Server running on http://localhost:${this.port}`);
         console.log(`MCP Endpoints:`);
         console.log(`  Initialize: POST http://localhost:${this.port}/mcp/initialize`);
@@ -522,6 +528,11 @@ class ChartMCPHttpServer {
         console.log(`  SSE Events: GET  http://localhost:${this.port}/mcp/events/:clientId`);
         console.log(`  Health:     GET  http://localhost:${this.port}/mcp/health`);
         resolve();
+      });
+
+      this.server.on('error', (error: Error) => {
+        console.error('Server error:', error);
+        reject(error);
       });
     });
   }
