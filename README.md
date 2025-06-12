@@ -350,7 +350,19 @@ npm run check
 
 # Test HTTP MCP server
 node test-mcp-http.js
+
+# View client examples
+cat examples/client-examples.md
 ```
+
+## Client Examples
+
+See `examples/client-examples.md` for complete implementations in:
+- **JavaScript/Node.js** - Full SSE client with real-time updates
+- **Python** - Threading-based SSE client with error handling  
+- **cURL** - Command-line testing and debugging
+
+Each example includes proper SSE event handling, chart generation tracking, and error management.
 
 ## License
 
